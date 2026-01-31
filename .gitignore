@@ -6,4 +6,6 @@ build/
 *.log
 .vscode/
 .idea/
+.env.*
+
 
