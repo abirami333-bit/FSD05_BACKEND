@@ -1,0 +1,34 @@
+import express from 'express';
+import { body } from 'express-validator';
+import {
+    createAccessRequest,
+    getMyRequests,
+    getAllRequests,
+    updateRequestStatus
+} from '../controllers/requestController.js';
+import { protect, authorize } from '../middleware/auth.js';
+
+const router = express.Router();
+
+// Validation rules
+const createRequestValidation = [
+    body('resourceName').trim().notEmpty().withMessage('Resource name is required'),
+    body('accessType').isIn(['READ', 'WRITE', 'ADMIN', 'FULL']).withMessage('Invalid access type'),
+    body('reason').trim().isLength({ min: 10 }).withMessage('Reason must be at least 10 characters')
+];
+
+const updateStatusValidation = [
+    body('status').isIn(['APPROVED', 'REJECTED']).withMessage('Status must be APPROVED or REJECTED'),
+    body('comments').optional().trim()
+];
+
+// Routes
+// REQUESTER routes
+router.post('/', protect, authorize('REQUESTER'), createRequestValidation, createAccessRequest);
+router.get('/my-requests', protect, authorize('REQUESTER'), getMyRequests);
+
+// APPROVER routes
+router.get('/all', protect, authorize('APPROVER'), getAllRequests);
+router.put('/:id/status', protect, authorize('APPROVER'), updateStatusValidation, updateRequestStatus);
+
+export default router;
